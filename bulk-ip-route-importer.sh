@@ -5,6 +5,7 @@ interface=""
 gateway_ip=""
 url=""
 ip_type=""
+action="add"  # Default action is to add routes
 
 # Parse command line arguments
 while [[ $# -gt 0 ]]; do
@@ -30,6 +31,10 @@ while [[ $# -gt 0 ]]; do
         shift # past argument
         shift # past value
         ;;
+        --del)
+        action="del"
+        shift # past argument
+        ;;
         *)    # unknown option
         shift # past argument
         ;;
@@ -39,6 +44,7 @@ done
 # Verify required parameters
 if [[ -z "$interface" || -z "$gateway_ip" || -z "$url" || -z "$ip_type" ]]; then
     echo "Usage: $0 --iptype <ipv4|ipv6> -i <interface> -g <gateway_ip> -u <url>"
+    echo "Usage: $0 --del --iptype <ipv4|ipv6> -i <interface> -g <gateway_ip> -u <url>"
     exit 1
 fi
 
@@ -76,9 +82,9 @@ fi
 # Iterate over each filtered IP address and add a route for each address
 while IFS= read -r ip_address; do
     # Add the route for the IP address via the specified interface
-    sudo ip route add "$ip_address" via "$gateway_ip" dev "$interface"
+    sudo ip route $action "$ip_address" via "$gateway_ip" dev "$interface"
     if [ $? -eq 0 ]; then
-        echo "Route added for $ip_address via $interface."
+        echo "Route $action for $ip_address via $interface."
     else
         echo "Failed to add route for $ip_address."
     fi
